@@ -22,7 +22,7 @@ public class TokenEntity {
   private UUID id;
 
   @Column(nullable = false, unique = true)
-  private String token;
+  private String value;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)

@@ -3,6 +3,7 @@ package tech.sneakybuzz.artifact.services.impl;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -11,10 +12,14 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import tech.sneakybuzz.artifact.dto.requests.VerifyAccountRequest;
+import tech.sneakybuzz.artifact.services.MailService;
 
+import java.util.UUID;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
-public class MailServiceImpl {
+public class MailServiceImpl implements MailService {
 
   private final JavaMailSender mailSender;
   private final TemplateEngine templateEngine;
@@ -23,16 +28,19 @@ public class MailServiceImpl {
   private String fromEmail;
 
   @Async
-  public void sendVerificationMail(VerifyAccountRequest request){
+  public void sendVerificationMail(String email, String name, String token){
     try{
+      String activationLink = "http://localhost:5173/account/verify?token=" + token.toString();
+      log.info("Activation link: {}", activationLink);
       Context context = new Context();
-      context.setVariable("name", "Kaushik");
-      String htmlContent = templateEngine.process("welcome",context);
+      context.setVariable("name", name);
+      context.setVariable("activationLink", activationLink);
+      String htmlContent = templateEngine.process("verify",context);
 
       MimeMessage mimeMessage = mailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-      helper.setTo(request.getEmail());
+      helper.setTo(email);
       helper.setSubject("Verify your account");
       helper.setText(htmlContent, true);
       helper.setFrom(fromEmail);
